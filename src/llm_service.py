@@ -2,19 +2,32 @@ import requests
 import logging
 from src.config import *
 from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt
+from src.prompts.george_carlin_prompt import get_george_carlin_prompt
 
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    def __init__(self):
-        logger.info("Инициализация LLM сервиса...")
-        # Можно добавить логику для выбора различных промптов в будущем
-        self.default_prompt_generator = get_rick_and_morty_prompt
+    def __init__(self, default_prompt='george_carlin'):
+        logger.info(f"Инициализация LLM сервиса с промптом: {default_prompt}...")
+        self.prompts = {
+            'rick_and_morty': get_rick_and_morty_prompt,
+            'george_carlin': get_george_carlin_prompt,
+            # Добавьте другие промпты здесь
+        }
+        self.set_prompt(default_prompt)
+
+    def set_prompt(self, prompt_name):
+        if prompt_name in self.prompts:
+            self.current_prompt_generator = self.prompts[prompt_name]
+            logger.info(f"Активный промпт установлен на: {prompt_name}")
+        else:
+            logger.warning(f"Промпт '{prompt_name}' не найден. Использование промпта по умолчанию ('rick_and_morty').")
+            self.current_prompt_generator = self.prompts['rick_and_morty']
 
     def summarize_with_llm(self, messages_text, bot_username):
-        """Рик Санчез читает ваш чат и рассказывает, что вы там накосячили"""
+        """Суммаризация чата с использованием выбранного промпта"""
         try:
-            logger.info("Рик врубил портал и залетел в ваш чатик...")
+            logger.info("Начало суммаризации...")
 
             if not messages_text:
                 return "*отрыжка* Пусто тут, Морти. Даже хуже, чем твой мозг."
@@ -40,7 +53,7 @@ class LLMService:
                 conversation = conversation[-17500:] + "\n\n...а до этого была целая простыня бреда, поверь мне на слово."
 
             # Используем вынесенный промпт
-            prompt = self.default_prompt_generator(conversation)
+            prompt = self.current_prompt_generator(conversation)
 
             url = f"{OPEN_AI_BASE_URL}{OPEN_AI_COMPLETIONS_PATHNAME}"
             headers = {
