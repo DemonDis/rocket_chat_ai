@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.exe
+*.obj
+*.so
+*.dll
+*.DS_Store
+.venv/
+env/
+
+# C extensions
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+dist/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+.coverage
+.tox/
+.pytest_cache/
+
+# Development artifacts
+.ipynb_checkpoints
+.mypy_cache/
+.vscode/
+
+# IDE specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Virtual environment
+venv/
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
