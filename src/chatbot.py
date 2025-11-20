@@ -22,7 +22,7 @@ class RocketChatBot:
             )
             
             self.base_url = ROCKETCHAT_URL
-            self.processed_messages_file = 'data/processed_messages.pkl'
+            self.processed_messages_file = 'src/data/processed_messages.pkl'
             self.processed_messages = self.load_processed_messages()
             self.bot_username = None
             
