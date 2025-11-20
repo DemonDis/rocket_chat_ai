@@ -21,9 +21,6 @@ def main():
         logger.info("Запуск бота...")
         
         chatbot = RocketChatBot()
-        # По умолчанию используется промпт Рика и Морти.
-        # Для использования промпта Джорджа Карлина, измените на:
-        # llm_service = LLMService(default_prompt='george_carlin')
         llm_service = LLMService()
         message_handler = MessageHandler(chatbot, llm_service)
 
