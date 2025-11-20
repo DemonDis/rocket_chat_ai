@@ -278,36 +278,6 @@ class DebugSummaryBot:
             else:
                 return f"Портал-гана сломался, код {response.status_code}. Иди чини сам."
 
-        except Exception as e:
-            logger.error(f"Рик упал: {e}")
-            return "Я... *отрыжка*... временно в другой реальности. Попробуй позже, Морти."
-
-            url = f"{OPEN_AI_BASE_URL}{OPEN_AI_COMPLETIONS_PATHNAME}"
-            headers = {
-                "Authorization": f"Bearer {OPEN_AI_API_KEY}",
-                "Content-Type": "application/json"
-            }
-
-            data = {
-                "model": LLM_NAME,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 2000,
-                "temperature": 0.4  # Дроздовичу излишняя креативность ни к чему
-            }
-
-            response = requests.post(url, headers=headers, json=data, timeout=180)
-
-            if response.status_code == 200:
-                summary = response.json()['choices'][0]['message']['content'].strip()
-                logger.info("Сводка в духе Дроздовича готова")
-                return summary
-
-            elif response.status_code == 429:
-                return "Слишком много запросов. Даже Дроздовичу иногда нужно передохнуть."
-            else:
-                logger.error(f"LLM вернул ошибку: {response.text}")
-                return f"Что-то пошло не так с нейросетью. Код {response.status_code}."
-
         except requests.exceptions.Timeout:
             return "Нейросеть задумалась, как Дроздович перед съёмкой про редких жуков. Подождём."
         except Exception as e:
