@@ -1,8 +1,9 @@
 import requests
 import logging
 from src.config import *
-from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt
-from src.prompts.george_carlin_prompt import get_george_carlin_prompt
+from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt, RICK_AND_MORTY_RESPONSES
+from src.prompts.george_carlin_prompt import get_george_carlin_prompt, GEORGE_CARLIN_RESPONSES
+from src.prompts.get_quentin_tarantino_prompt import get_quentin_tarantino_prompt, TARANTINO_RESPONSES
 
 logger = logging.getLogger(__name__)
 
@@ -12,17 +13,29 @@ class LLMService:
         self.prompts = {
             'rick_and_morty': get_rick_and_morty_prompt,
             'george_carlin': get_george_carlin_prompt,
+            'quentin_tarantino': get_quentin_tarantino_prompt
             # Добавьте другие промпты здесь
         }
+        self.responses = {
+            'rick_and_morty': RICK_AND_MORTY_RESPONSES,
+            'george_carlin': GEORGE_CARLIN_RESPONSES,
+            'quentin_tarantino': TARANTINO_RESPONSES,
+        }
+        self.current_prompt_name = None
+        self.current_responses = None
         self.set_prompt(default_prompt)
 
     def set_prompt(self, prompt_name):
         if prompt_name in self.prompts:
             self.current_prompt_generator = self.prompts[prompt_name]
+            self.current_prompt_name = prompt_name
+            self.current_responses = self.responses[prompt_name]
             logger.info(f"Активный промпт установлен на: {prompt_name}")
         else:
             logger.warning(f"Промпт '{prompt_name}' не найден. Использование промпта по умолчанию ('rick_and_morty').")
+            self.current_prompt_name = 'rick_and_morty'
             self.current_prompt_generator = self.prompts['rick_and_morty']
+            self.current_responses = self.responses['rick_and_morty']
 
     def summarize_with_llm(self, messages_text, bot_username):
         """Суммаризация чата с использованием выбранного промпта"""
@@ -30,7 +43,7 @@ class LLMService:
             logger.info("Начало суммаризации...")
 
             if not messages_text:
-                return "*отрыжка* Пусто тут, Морти. Даже хуже, чем твой мозг."
+                return self.current_responses.get("empty_messages_text", "Ничего нет. Абсолютно.")
 
             participants = set()
             lines = []
@@ -46,7 +59,7 @@ class LLMService:
                     lines.append(f"@{username}: {text}")
 
             if not lines:
-                return "Тут только боты писали, Морти. Скучно."
+                return self.current_responses.get("only_bot_messages", "Только автоматические сообщения. Ничего интересного.")
 
             conversation = "\n".join(lines)
             if len(conversation) > 18000:
@@ -72,15 +85,15 @@ class LLMService:
 
             if response.status_code == 200:
                 summary = response.json()['choices'][0]['message']['content'].strip()
-                return summary + "\n\n*отрыжка* Wubba Lubba Dub Dub!"
+                return summary + self.current_responses.get("summary_suffix", "")
 
             elif response.status_code == 429:
-                return "Слишком много запросов, Морти! Даже мне нужен перерыв на мега-семена."
+                return self.current_responses.get("too_many_requests", "Слишком много запросов. Попробуйте позже.")
             else:
-                return f"Портал-гана сломался, код {response.status_code}. Иди чини сам."
+                return self.current_responses.get("api_error", "Произошла ошибка: код {status_code}.").format(status_code=response.status_code)
 
         except requests.exceptions.Timeout:
-            return "Нейросеть задумалась, как Дроздович перед съёмкой про редких жуков. Подождём."
+            return self.current_responses.get("timeout", "Превышено время ожидания ответа от LLM.")
         except Exception as e:
             logger.error(f"Ошибка в summarize_with_llm: {e}")
-            return "Простите, я слегка растерялся среди всей этой переписки."
+            return self.current_responses.get("generic_exception", "Произошла внутренняя ошибка.")
