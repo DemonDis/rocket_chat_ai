@@ -4,6 +4,7 @@ from src.config import *
 from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt, RICK_AND_MORTY_RESPONSES
 from src.prompts.george_carlin_prompt import get_george_carlin_prompt, GEORGE_CARLIN_RESPONSES
 from src.prompts.get_quentin_tarantino_prompt import get_quentin_tarantino_prompt, TARANTINO_RESPONSES
+from src.prompts.get_anfisa_chekhova_prompt import get_anfisa_chekhova_prompt, ANFISA_RESPONSES
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +14,15 @@ class LLMService:
         self.prompts = {
             'rick_and_morty': get_rick_and_morty_prompt,
             'george_carlin': get_george_carlin_prompt,
-            'quentin_tarantino': get_quentin_tarantino_prompt
+            'quentin_tarantino': get_quentin_tarantino_prompt,
+            'anfisa_chekhova': get_anfisa_chekhova_prompt
             # Добавьте другие промпты здесь
         }
         self.responses = {
             'rick_and_morty': RICK_AND_MORTY_RESPONSES,
             'george_carlin': GEORGE_CARLIN_RESPONSES,
             'quentin_tarantino': TARANTINO_RESPONSES,
+            'anfisa_chekhova': ANFISA_RESPONSES
         }
         self.current_prompt_name = None
         self.current_responses = None
