@@ -1,3 +1,7 @@
+RICK_AND_MORTY_SETTINGS = {
+    "temperature": 0.9
+}
+
 RICK_AND_MORTY_RESPONSES = {
     "empty_messages_text": "*отрыжка* Пусто тут, Морти. Даже хуже, чем твой мозг.",
     "only_bot_messages": "Тут только боты писали, Морти. Скучно.",

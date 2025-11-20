@@ -1,3 +1,7 @@
+GEORGE_CARLIN_SETTINGS = {
+    "temperature": 0.7
+}
+
 GEORGE_CARLIN_RESPONSES = {
     "empty_messages_text": "Пусто. Как головы большинства людей. Чего ты ждал? Глубоких мыслей?",
     "only_bot_messages": "Только боты тёрли. Видимо, у них больше смысла, чем у вас, мешки с костями.",

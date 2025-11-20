@@ -1,28 +1,38 @@
 import requests
 import logging
 from src.config import *
-from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt, RICK_AND_MORTY_RESPONSES
-from src.prompts.george_carlin_prompt import get_george_carlin_prompt, GEORGE_CARLIN_RESPONSES
-from src.prompts.get_quentin_tarantino_prompt import get_quentin_tarantino_prompt, TARANTINO_RESPONSES
+from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt, RICK_AND_MORTY_RESPONSES, RICK_AND_MORTY_SETTINGS
+from src.prompts.george_carlin_prompt import get_george_carlin_prompt, GEORGE_CARLIN_RESPONSES, GEORGE_CARLIN_SETTINGS
+from src.prompts.get_quentin_tarantino_prompt import get_quentin_tarantino_prompt, TARANTINO_RESPONSES, TARANTINO_SETTINGS
+from src.prompts.get_neutral_professional_prompt import get_neutral_professional_prompt, NEUTRAL_RESPONSES, PROF_SETTINGS
 
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    def __init__(self, default_prompt='rick_and_morty'):
+    def __init__(self, default_prompt='prof'):
         logger.info(f"Инициализация LLM сервиса с промптом: {default_prompt}...")
         self.prompts = {
             'rick_and_morty': get_rick_and_morty_prompt,
             'george_carlin': get_george_carlin_prompt,
-            'quentin_tarantino': get_quentin_tarantino_prompt
+            'quentin_tarantino': get_quentin_tarantino_prompt,
+            'prof': get_neutral_professional_prompt
             # Добавьте другие промпты здесь
         }
         self.responses = {
             'rick_and_morty': RICK_AND_MORTY_RESPONSES,
             'george_carlin': GEORGE_CARLIN_RESPONSES,
-            'quentin_tarantino': TARANTINO_RESPONSES
+            'quentin_tarantino': TARANTINO_RESPONSES,
+            'prof': NEUTRAL_RESPONSES
+        }
+        self.settings = {
+            'rick_and_morty': RICK_AND_MORTY_SETTINGS,
+            'george_carlin': GEORGE_CARLIN_SETTINGS,
+            'quentin_tarantino': TARANTINO_SETTINGS,
+            'prof': PROF_SETTINGS
         }
         self.current_prompt_name = None
         self.current_responses = None
+        self.current_settings = None
         self.set_prompt(default_prompt)
 
     def set_prompt(self, prompt_name):
@@ -30,10 +40,11 @@ class LLMService:
             self.current_prompt_generator = self.prompts[prompt_name]
             self.current_prompt_name = prompt_name
             self.current_responses = self.responses[prompt_name]
+            self.current_settings = self.settings[prompt_name]
             logger.info(f"Активный промпт установлен на: {prompt_name}")
             return True
         else:
-            logger.warning(f"Промпт '{prompt_name}' не найден. Использование промпта по умолчанию ('rick_and_morty').")
+            logger.warning(f"Промпт '{prompt_name}' не найден. Использование промпта по умолчанию ('prof').")
             return False
 
     def summarize_with_llm(self, messages_text, bot_username, prompt_name=None):
@@ -82,7 +93,7 @@ class LLMService:
                 "model": LLM_NAME,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": MAX_TOKENS,
-                "temperature": TEMPERATURE
+                "temperature": self.current_settings.get("temperature", TEMPERATURE)
             }
 
             response = requests.post(url, headers=headers, json=data, timeout=180)

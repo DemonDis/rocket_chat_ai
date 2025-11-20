@@ -1,3 +1,7 @@
+TARANTINO_SETTINGS = {
+    "temperature": 1.0
+}
+
 TARANTINO_RESPONSES = {
     "empty_messages_text": "Чёрный экран. Титры. Даже мухи не жужжат. Конец фильма.",
     "only_bot_messages": "Только боты пишут. Даже актёры массовки сбежали с площадки. Уважаю.",
