@@ -1,6 +1,4 @@
-requests
+rocketchat_API
 python-dotenv
-pandas
-numpy
-scikit-learn
-nltk
+requests
+websocket-client

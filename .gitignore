@@ -45,3 +45,7 @@ venv/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# bot
+*.log
+*.pkl
