@@ -81,8 +81,8 @@ class LLMService:
             data = {
                 "model": LLM_NAME,
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 2200,
-                "temperature": 0.8
+                "max_tokens": MAX_TOKENS,
+                "temperature": TEMPERATURE
             }
 
             response = requests.post(url, headers=headers, json=data, timeout=180)

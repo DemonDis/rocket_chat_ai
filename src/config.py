@@ -15,6 +15,8 @@ OPEN_AI_API_KEY = os.getenv('OPEN_AI_API_KEY')
 OPEN_AI_BASE_URL = os.getenv('OPEN_AI_BASE_URL')
 OPEN_AI_COMPLETIONS_PATHNAME = os.getenv('OPEN_AI_COMPLETIONS_PATHNAME')
 LLM_NAME = os.getenv('LLM_NAME')
+MAX_TOKENS = int(os.getenv('MAX_TOKENS', 2200))
+TEMPERATURE = float(os.getenv('TEMPERATURE', 0.8))
 
 # Проверка обязательных переменных
 def check_config():
