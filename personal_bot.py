@@ -180,66 +180,144 @@ class DebugSummaryBot:
             logger.error(f"Исключение при получении сообщений: {e}")
             return []
 
+
     def summarize_with_llm(self, messages_text):
-        """Суммаризация сообщений с помощью LLM"""
+        """Суммаризация в стиле Дроздовича — 100% точные @username и ноль «не понятно» без причины"""
         try:
-            logger.info("Начало суммаризации с LLM...")
-            
+            logger.info("Запускаю Дроздовича на полную мощность...")
+
             if not messages_text:
-                return "❌ Нет сообщений для анализа"
-            
-            conversation_text = "\n".join([
-                f"{msg.get('username', 'Unknown')}: {msg.get('msg', '')}" 
-                for msg in messages_text
-            ])
-            
-            # Обрезаем слишком длинные тексты (ограничение токенов)
-            if len(conversation_text) > 12000:
-                conversation_text = conversation_text[:12000] + "\n\n... (сообщение обрезано)"
-            
-            prompt = f"Создай краткое содержание этого обсуждения. Выдели основные темы, ключевые моменты и выводы:\n\n{conversation_text}"
-            
+                return "Тишина. Даже мыши в серверной притихли."
+
+            # Собираем участников и переписку
+            participants = set()
+            conversation_lines = []
+
+            for msg in reversed(messages_text):
+                username = msg.get('username') or msg.get('u', {}).get('username')
+                if not username or username == self.bot_username:
+                    continue
+
+                participants.add(username)
+                text = msg.get('msg', '').strip()
+                if text:
+                    conversation_lines.append(f"@{username}: {text}")
+
+            if not conversation_lines:
+                return "Кто-то писал, но, кажется, только боты и системные сообщения."
+
+            conversation_text = "\n".join(conversation_lines)
+
+            if len(conversation_text) > 18000:
+                conversation_text = conversation_text[-17500:] + "\n\n…начало было длинным и прекрасным, но лимиты есть лимиты."
+
+            # ФИНАЛЬНЫЙ ПРОМТ — теперь железобетонный
+            prompt = f"""Ты — Николай Николаевич Дроздович, который решил разобраться в нейросетях и чатах разработчиков.
+Сделай точную, интеллигентную, чуть ироничную сводку переписки.
+
+Критически важные правила:
+1. Всех участников всегда пиши через @username — даже если он один.
+2. Никогда не пиши «Незнакомец», «Unknown» или «не совсем понятно из контекста», если username есть в сообщениях.
+3. Если в чате только один человек — всё равно пиши @его_ник в разделе участников.
+4. Если решений/дедлайнов нет — пиши «никаких явных договорённостей не было».
+5. Ссылки, файлы, технологии, цифры — сохраняй дословно.
+
+Формат строго такой:
+
+Тема обсуждения: [одна точная фраза]
+
+Участники и их позиции:
+• @username — что делал, говорил, предлагал, объяснял
+• @username — ...
+
+Хронология событий:
+1. @кто что написал → суть
+2. ...
+
+Принятые решения:
+• ... (ответственный: @кто, дедлайн: когда) 
+или
+• никаких явных договорённостей не было
+
+Осталось сделать:
+• ...
+или
+• открытых задач не обозначено
+
+Общее настроение: [короткая характеристика]
+
+Важные артефакты:
+Ссылки: ...
+Файлы: ...
+Технологии/инструменты: ...
+Цифры и сроки: ...
+
+Переписка:
+{conversation_text}
+"""
+
             url = f"{OPEN_AI_BASE_URL}{OPEN_AI_COMPLETIONS_PATHNAME}"
-            
             headers = {
                 "Authorization": f"Bearer {OPEN_AI_API_KEY}",
                 "Content-Type": "application/json"
             }
-            
+
             data = {
                 "model": LLM_NAME,
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1000,  # Увеличил лимит токенов
-                "temperature": 0.3
+                "max_tokens": 2000,
+                "temperature": 0.35
             }
-            
-            logger.info(f"Отправка запроса к LLM: {LLM_NAME} (таймаут 120 сек)")
-            
-            # Увеличиваем таймаут для долгих запросов
-            response = requests.post(url, headers=headers, json=data, timeout=120)
-            
+
+            response = requests.post(url, headers=headers, json=data, timeout=180)
+
             if response.status_code == 200:
-                result = response.json()
-                summary = result['choices'][0]['message']['content'].strip()
-                logger.info("Суммаризация завершена успешно")
+                summary = response.json()['choices'][0]['message']['content'].strip()
                 return summary
+
             elif response.status_code == 429:
-                error_msg = "❌ Слишком много запросов к OpenAI. Подождите немного и попробуйте снова."
-                logger.error(f"Rate limit: {response.text}")
-                return error_msg
+                return "Слишком много запросов. Даже Дроздович иногда просит тайм-аут."
             else:
-                error_msg = f"❌ Ошибка LLM API: {response.status_code} - {response.text}"
-                logger.error(error_msg)
-                return error_msg
-                
-        except requests.exceptions.Timeout:
-            error_msg = "❌ Таймаут при запросе к LLM. Попробуйте уменьшить количество сообщений для анализа."
-            logger.error(error_msg)
-            return error_msg
+                logger.error(f"LLM ошибка: {response.text}")
+                return f"Нейросеть немного запыхалась. Код {response.status_code}."
+
         except Exception as e:
-            error_msg = f"❌ Исключение при суммаризации: {e}"
-            logger.error(error_msg)
-            return error_msg
+            logger.error(f"summarize_with_llm упал: {e}")
+            return "Простите, я на секунду отвлёкся на редкого жука в коде."
+
+            url = f"{OPEN_AI_BASE_URL}{OPEN_AI_COMPLETIONS_PATHNAME}"
+            headers = {
+                "Authorization": f"Bearer {OPEN_AI_API_KEY}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "model": LLM_NAME,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 2000,
+                "temperature": 0.4  # Дроздовичу излишняя креативность ни к чему
+            }
+
+            response = requests.post(url, headers=headers, json=data, timeout=180)
+
+            if response.status_code == 200:
+                summary = response.json()['choices'][0]['message']['content'].strip()
+                logger.info("Сводка в духе Дроздовича готова")
+                return summary
+
+            elif response.status_code == 429:
+                return "Слишком много запросов. Даже Дроздовичу иногда нужно передохнуть."
+            else:
+                logger.error(f"LLM вернул ошибку: {response.text}")
+                return f"Что-то пошло не так с нейросетью. Код {response.status_code}."
+
+        except requests.exceptions.Timeout:
+            return "Нейросеть задумалась, как Дроздович перед съёмкой про редких жуков. Подождём."
+        except Exception as e:
+            logger.error(f"Ошибка в summarize_with_llm: {e}")
+            return "Простите, я слегка растерялся среди всей этой переписки."
+
+
 
     def get_direct_messages(self):
         """Получить личные сообщения к боту (только новые)"""
