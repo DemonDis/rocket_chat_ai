@@ -6,6 +6,7 @@ class MessageHandler:
     def __init__(self, chatbot, llm_service):
         self.chatbot = chatbot
         self.llm_service = llm_service
+        self.current_prompt = self.llm_service.current_prompt_name # Store the current prompt for each user
         logger.info("Инициализация обработчика сообщений...")
 
     def process_direct_message(self, message):
@@ -29,17 +30,20 @@ class MessageHandler:
             logger.info(f"ЛС от {username}: {text}")
             
             if text.lower() in ['!help', '!помощь', 'help', 'помощь']:
-                help_text = """🤖 **Бот суммаризации чатов**
+                help_text = f"""🤖 **Бот суммаризации чатов**
 
 **Доступные команды:**
 • `help` - показать это сообщение
 • `rooms` - список доступных комнат
 • `summary <имя_комнаты>` - создать суммаризацию чата
 • `summary <имя_комнаты> <количество_сообщений>` - суммаризация с указанием количества сообщений
+• `prompt <имя_промпта>` - установить активный промпт (текущий: `{self.current_prompt}`)
+• `list_prompts` - показать список доступных промптов
 
 **Примеры:**
 • `summary general` - суммаризация комнаты general (30 сообщений)
 • `summary random 50` - суммаризация 50 сообщений из комнаты random
+• `prompt rick_and_morty` - установить промпт "Рик и Морти"
 
 *Примечание: суммаризация может занять некоторое время (до 2 минут)*"""
                 
@@ -57,6 +61,25 @@ class MessageHandler:
                 rooms_list = "\n".join([f"• #{room.get('name')}" for room in rooms[:15]])
                 response_text = f"📋 **Доступные комнаты ({len(rooms)}):**\n\n{rooms_list}\n\nИспользуйте: `summary имя_комнаты`"
                 self.chatbot.send_direct_message(username, response_text)
+
+            elif text.lower().startswith('prompt '):
+                parts = text.split()
+                if len(parts) < 2:
+                    self.chatbot.send_direct_message(username, "❌ Укажите имя промпта. Например: `prompt rick_and_morty`")
+                    return
+                
+                new_prompt_name = parts[1]
+                if new_prompt_name in self.llm_service.prompts:
+                    self.current_prompt = new_prompt_name
+                    self.llm_service.set_prompt(new_prompt_name) # Set it globally for now, until per-user prompt is implemented
+                    self.chatbot.send_direct_message(username, f"✅ Промпт успешно изменен на: `{new_prompt_name}`")
+                    logger.info(f"Промпт изменен на {new_prompt_name} для пользователя {username}")
+                else:
+                    self.chatbot.send_direct_message(username, f"❌ Промпт `{new_prompt_name}` не найден. Доступные промпты: `{', '.join(self.llm_service.prompts.keys())}`")
+
+            elif text.lower() == 'list_prompts':
+                available_prompts = ", ".join(self.llm_service.prompts.keys())
+                self.chatbot.send_direct_message(username, f"📋 **Доступные промпты:** `{available_prompts}`")
             
             elif text.lower().startswith('summary '):
                 parts = text.split()
@@ -84,7 +107,7 @@ class MessageHandler:
                 
                 self.chatbot.send_direct_message(username, f"📊 Анализирую {len(messages)} сообщений...")
                 
-                summary = self.llm_service.summarize_with_llm(messages, self.chatbot.bot_username)
+                summary = self.llm_service.summarize_with_llm(messages, self.chatbot.bot_username, prompt_name=self.current_prompt)
                 result = f"📊 **Краткое содержание: #{room_name}**\n\n{summary}\n\n---\n*На основе анализа {len(messages)} сообщений*"
                 
                 if self.chatbot.send_direct_message(username, result):

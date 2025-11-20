@@ -4,25 +4,22 @@ from src.config import *
 from src.prompts.rick_and_morty_prompt import get_rick_and_morty_prompt, RICK_AND_MORTY_RESPONSES
 from src.prompts.george_carlin_prompt import get_george_carlin_prompt, GEORGE_CARLIN_RESPONSES
 from src.prompts.get_quentin_tarantino_prompt import get_quentin_tarantino_prompt, TARANTINO_RESPONSES
-from src.prompts.get_anfisa_chekhova_prompt import get_anfisa_chekhova_prompt, ANFISA_RESPONSES
 
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    def __init__(self, default_prompt='george_carlin'):
+    def __init__(self, default_prompt='rick_and_morty'):
         logger.info(f"Инициализация LLM сервиса с промптом: {default_prompt}...")
         self.prompts = {
             'rick_and_morty': get_rick_and_morty_prompt,
             'george_carlin': get_george_carlin_prompt,
-            'quentin_tarantino': get_quentin_tarantino_prompt,
-            'anfisa_chekhova': get_anfisa_chekhova_prompt
+            'quentin_tarantino': get_quentin_tarantino_prompt
             # Добавьте другие промпты здесь
         }
         self.responses = {
             'rick_and_morty': RICK_AND_MORTY_RESPONSES,
             'george_carlin': GEORGE_CARLIN_RESPONSES,
-            'quentin_tarantino': TARANTINO_RESPONSES,
-            'anfisa_chekhova': ANFISA_RESPONSES
+            'quentin_tarantino': TARANTINO_RESPONSES
         }
         self.current_prompt_name = None
         self.current_responses = None
@@ -34,16 +31,20 @@ class LLMService:
             self.current_prompt_name = prompt_name
             self.current_responses = self.responses[prompt_name]
             logger.info(f"Активный промпт установлен на: {prompt_name}")
+            return True
         else:
             logger.warning(f"Промпт '{prompt_name}' не найден. Использование промпта по умолчанию ('rick_and_morty').")
-            self.current_prompt_name = 'rick_and_morty'
-            self.current_prompt_generator = self.prompts['rick_and_morty']
-            self.current_responses = self.responses['rick_and_morty']
+            return False
 
-    def summarize_with_llm(self, messages_text, bot_username):
+    def summarize_with_llm(self, messages_text, bot_username, prompt_name=None):
         """Суммаризация чата с использованием выбранного промпта"""
         try:
-            logger.info("Начало суммаризации...")
+            if prompt_name and prompt_name != self.current_prompt_name:
+                if not self.set_prompt(prompt_name):
+                    # Fallback to current prompt if new prompt not found
+                    logger.warning(f"Не удалось установить промпт '{prompt_name}'. Использование текущего промпта '{self.current_prompt_name}'.")
+
+            logger.info(f"Начало суммаризации с промптом '{self.current_prompt_name}'...")
 
             if not messages_text:
                 return self.current_responses.get("empty_messages_text", "Ничего нет. Абсолютно.")
