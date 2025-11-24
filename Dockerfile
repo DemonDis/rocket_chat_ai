@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy the main application file into the container
 COPY main.py .
 COPY src/ /app/src/
+COPY .env /app/
 
 # Install any dependencies specified in requirements.txt
 COPY requirements.txt .

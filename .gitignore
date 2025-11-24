@@ -49,4 +49,3 @@ venv/
 # bot
 *.log
 *.pkl
-/mongo_data
