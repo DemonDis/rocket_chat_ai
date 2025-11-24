@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+ bot_ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ROCKETCHAT_URL: http://host.docker.internal:80
+    volumes:
+      - ./src/data:/app/src/data
+      - ./src/logs:/app/src/logs
+    env_file:
+      - ./.env

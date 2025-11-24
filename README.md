@@ -69,3 +69,10 @@ docker run -d --name rocketchat -p 80:3000 --link db --env ROOT_URL=http://local
 ```bash
 curl -X GET http://localhost/api/v1/im.list ^  -H "X-User-Id: <ROCKETCHAT_USER_ID>" ^  -H "X-Auth-Token: <ROCKETCHAT_AUTH_TOKEN>"
 ```
+
+### Контейнер для AI
+Для запуска приложения используйте следующую команду в корневой директории проекта: `docker compose up --build`
+
+Если вы хотите запустить его в фоновом режиме: `docker compose up --build -d`
+
+Для остановки контейнеров: `docker compose down`
