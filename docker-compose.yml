@@ -1,14 +1,25 @@
 version: '3.8'
 
 services:
- bot_ai:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  db:
+    image: mongo:8.0
+    container_name: db
+    ports:
+      - "27017:27017"
+
+  rocketchat:
+    image: rocket.chat
+    container_name: rocketchat
+    ports:
+      - "80:3000"
+    links:
+      - db
     environment:
-      ROCKETCHAT_URL: http://host.docker.internal:80
-    volumes:
-      - ./src/data:/app/src/data
-      - ./src/logs:/app/src/logs
-    env_file:
-      - ./.env
+      - ROOT_URL=http://localhost:80
+      - MONGO_URL=mongodb://db:27017/rocketchat
+      - MONGO_OPLOG_URL=mongodb://db:27017/local
+    depends_on:
+      - db
+
+volumes:
+  mongo_data:
