@@ -77,14 +77,7 @@ curl -X GET http://localhost/api/v1/im.list ^  -H "X-User-Id: <ROCKETCHAT_USER_I
 
 Для остановки контейнеров: `docker compose down`
 
-docker build -t bot_ai .
-
- docker run -d --name bot_ai -v "$(pwd)/src/logs:/app/src/logs" -v "$(pwd)/src/data:/app/src/data" bot_ai
-
-## Notes
-
 ### Контейнер для AI (Подробные инструкции)
-
 Эти команды используются для сборки и запуска Docker-образа вашего AI-бота.
 
 *   **`docker build -t bot_ai .`**:
