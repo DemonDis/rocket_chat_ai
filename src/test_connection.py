@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def test_connection():
-    base_url = os.getenv('ROCKETCHAT_URL', 'http://localhost:80')
+    base_url = os.getenv('ROCKETCHAT_URL', '')
     user_id = os.getenv('ROCKETCHAT_USER_ID')
     auth_token = os.getenv('ROCKETCHAT_AUTH_TOKEN')
     

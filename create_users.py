@@ -1,13 +1,14 @@
 import requests
 import json
 import logging
-from src.config import (
-    ROCKETCHAT_URL,
-    ROCKETCHAT_USER,
-    ROCKETCHAT_PASSWORD,
-    ROCKETCHAT_USER_ID,
-    ROCKETCHAT_AUTH_TOKEN,
-)
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+ROCKETCHAT_URL = os.getenv("ROCKETCHAT_URL", "")
+ROCKETCHAT_USER = os.getenv("ROCKETCHAT_USER")
+ROCKETCHAT_PASSWORD = os.getenv("ROCKETCHAT_PASSWORD")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -19,8 +20,6 @@ class RocketChatUserManager:
     def __init__(self):
         self.url = ROCKETCHAT_URL.rstrip("/")
         self.headers = {
-            "X-User-Id": ROCKETCHAT_USER_ID,
-            "X-Auth-Token": ROCKETCHAT_AUTH_TOKEN,
             "Content-Type": "application/json",
         }
         self._login()
@@ -40,22 +39,30 @@ class RocketChatUserManager:
 
     def user_exists(self, username=None, email=None):
         if username:
-            resp = requests.get(
-                f"{self.url}/api/v1/users.info",
-                headers=self.headers,
-                params={"username": username},
-            )
-            if resp.json().get("user"):
-                return True
+            try:
+                resp = requests.get(
+                    f"{self.url}/api/v1/users.info",
+                    headers=self.headers,
+                    params={"username": username},
+                )
+                data = resp.json()
+                if data.get("user"):
+                    return True
+            except Exception as e:
+                logger.warning(f"Ошибка проверки username: {e}")
 
         if email:
-            resp = requests.post(
-                f"{self.url}/api/v1/users.list",
-                headers=self.headers,
-                json={"query": json.dumps({"emails.address": email})},
-            )
-            if resp.json().get("count", 0) > 0:
-                return True
+            try:
+                resp = requests.post(
+                    f"{self.url}/api/v1/users.list",
+                    headers=self.headers,
+                    json={"query": json.dumps({"emails.address": email})},
+                )
+                data = resp.json()
+                if data.get("count", 0) > 0:
+                    return True
+            except Exception as e:
+                logger.warning(f"Ошибка проверки email: {e}")
 
         return False
 
@@ -115,27 +122,10 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("Использование: python create_users.py <файл_с_пользователями.json>")
-        print("Пример JSON файла:")
-        print(
-            json.dumps(
-                [
-                    {
-                        "username": "user1",
-                        "email": "user1@test.com",
-                        "name": "User One",
-                        "password": "Pass123",
-                    },
-                    {
-                        "username": "user2",
-                        "email": "user2@test.com",
-                        "name": "User Two",
-                        "roles": ["bot"],
-                    },
-                ],
-                indent=2,
-            )
-        )
-        sys.exit(1)
+
+        if not ROCKETCHAT_USER or not ROCKETCHAT_PASSWORD:
+            print("❌ Укажите ROCKETCHAT_USER и ROCKETCHAT_PASSWORD в .env файле")
+            sys.exit(1)
 
     manager = RocketChatUserManager()
     results = manager.create_users_from_file(sys.argv[1])

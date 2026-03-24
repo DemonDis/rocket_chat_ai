@@ -49,3 +49,5 @@ venv/
 # bot
 *.log
 *.pkl
+
+.env
