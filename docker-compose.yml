@@ -1,25 +1,43 @@
 version: '3.8'
 
 services:
-  db:
-    image: mongo:8.0
-    container_name: db
+  mongo:
+    image: mongo:7
+    container_name: rocketchat-mongo
+    restart: unless-stopped
+    command: mongod --replSet rs0 --oplogSize 1024
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: |
+        mongosh --eval "rs.status()" --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   rocketchat:
-    image: rocket.chat
+    image: registry.rocket.chat/rocketchat/rocket.chat:latest
     container_name: rocketchat
-    ports:
-      - "80:3000"
-    links:
-      - db
-    environment:
-      - ROOT_URL=http://localhost:80
-      - MONGO_URL=mongodb://db:27017/rocketchat
-      - MONGO_OPLOG_URL=mongodb://db:27017/local
+    restart: unless-stopped
     depends_on:
-      - db
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - ROOT_URL=http://localhost:3000
+      - PORT=3000
+      - MONGO_URL=mongodb://mongo:27017/rocketchat?replicaSet=rs0
+      - MONGO_OPLOG_URL=mongodb://mongo:27017/local?replicaSet=rs0
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASS=admin_password
+      - ADMIN_EMAIL=admin@localhost
+    volumes:
+      - uploads:/app/uploads
 
 volumes:
   mongo_data:
+  uploads:
