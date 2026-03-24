@@ -74,12 +74,14 @@ cd rocket_chat_ai
 
 2.  **Создайте виртуальное окружение (рекомендуется):**
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 3.  **Активируйте виртуальное окружение:**
 ```bash
 . .\venv\Scripts\activate
+# для Linux
+source .venv/bin/activate 
 ```
 
 4.  **Установите необходимые пакеты:**

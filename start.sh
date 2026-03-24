@@ -2,7 +2,7 @@
 set -e
 
 echo "=== 1. Остановка и удаление старых контейнеров ==="
-docker compose down
+docker compose down -v
 
 echo ""
 echo "=== 2. Запуск MongoDB ==="

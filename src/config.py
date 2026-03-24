@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Rocket.Chat конфигурация
-ROCKETCHAT_URL = os.getenv('ROCKETCHAT_URL', 'http://192.168.91.162:80')
+ROCKETCHAT_URL = os.getenv('ROCKETCHAT_URL', '')
 ROCKETCHAT_USER = os.getenv('ROCKETCHAT_USER')
 ROCKETCHAT_PASSWORD = os.getenv('ROCKETCHAT_PASSWORD')
 ROCKETCHAT_USER_ID = os.getenv('ROCKETCHAT_USER_ID')
